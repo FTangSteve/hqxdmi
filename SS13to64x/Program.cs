@@ -144,7 +144,7 @@ namespace SS13to64x
                 }
                 stateIndex++;
             }
-            DmiImage.Create(dmi, Path.Combine(outPath, "processed", relPath + ".dmi"));
+            DmiImage.Create(dmi, Path.Combine(outPath, "processed", relPath + ".png"), Path.Combine(outPath, "final", relPath + ".dmi"));
         }
 
         private static void AskContinue()

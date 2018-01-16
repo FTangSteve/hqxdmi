@@ -124,7 +124,7 @@ namespace SS13to64x.DMI
             return str;
         }
 
-        public static void Create(DmiImage dmi, string path)
+        public static void Create(DmiImage dmi, string path, string outPath)
         {
             var builder = new StringBuilder("# BEGIN DMI\n");
 
@@ -177,12 +177,11 @@ namespace SS13to64x.DMI
             img.Save(path, FREE_IMAGE_FORMAT.FIF_PNG, FREE_IMAGE_SAVE_FLAGS.PNG_Z_DEFAULT_COMPRESSION);
 
             // Work around because FREEIMAGE saves metatags as unicode.
-            AddMetadata(path, "Description", builder.ToString());
+            AddMetadata(path, "Description", builder.ToString(), outPath);
         }
 
-        public static void AddMetadata(String origFilename, Dictionary<string, string> data)
+        public static void AddMetadata(String origFilename, Dictionary<string, string> data, String destFilename)
         {
-            String destFilename = Path.GetRandomFileName();
             PngReader pngr = FileHelper.CreatePngReader(origFilename); 
             PngWriter pngw = FileHelper.CreatePngWriter(destFilename, pngr.ImgInfo, true); 
 
@@ -209,11 +208,11 @@ namespace SS13to64x.DMI
             File.Move(destFilename, origFilename);
         }
 
-        public static void AddMetadata(String origFilename, string key, string value)
+        public static void AddMetadata(String origFilename, string key, string value, String outPath)
         {
             var data = new Dictionary<string, string>();
             data.Add(key, value);
-            AddMetadata(origFilename, data);
+            AddMetadata(origFilename, data, outPath);
         }
 
         private static int PowerOfTwo(int v)
