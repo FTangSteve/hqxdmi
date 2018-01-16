@@ -58,7 +58,7 @@ namespace SS13to64x
             files = Generate(files, inputFolder, outputFolder);
 
 
-            if(_parrallelEnabled)
+            if (_parrallelEnabled)
                 Parallel.ForEach(files, file => Rebuild(file, outputFolder));
             else
             {
@@ -95,7 +95,7 @@ namespace SS13to64x
                 });
 
             var path = Path.GetDirectoryName(file);
-            var relPath = path.Replace((outPath+"\\raw"), "");
+            var relPath = path.Replace((outPath + "\\raw"), "");
             if (relPath.StartsWith("\\"))
                 relPath = relPath.Substring(1);
             DmiImage dmi = null;
@@ -109,7 +109,7 @@ namespace SS13to64x
             }
             catch (Exception e)
             {
-                _log.Error("Error during rebuild",e);
+                _log.Error("Error during rebuild", e);
                 throw;
             }
             if (!use4X)
@@ -133,11 +133,11 @@ namespace SS13to64x
                     foreach (var image in frame.GetImages())
                     {
                         var imagePath = Path.Combine(framePath, image.Dir.ToString() + ".png");
-                        if(File.Exists(imagePath))
+                        if (File.Exists(imagePath))
                             image.Bitmap = new Bitmap(imagePath);
                         else
                         {
-                            Console.WriteLine("File {0} not found!",imagePath);
+                            Console.WriteLine("File {0} not found!", imagePath);
                         }
                     }
                     frameIndex++;
@@ -166,7 +166,7 @@ namespace SS13to64x
                 Parallel.ForEach(files, file =>
                 {
                     var f = ExtractDMI(inputFolder, outputFolder, file);
-                    if(!String.IsNullOrEmpty(f))
+                    if (!String.IsNullOrEmpty(f))
                         bag.Add(f);
                 });
                 processedFiles = bag.ToList();
@@ -189,7 +189,7 @@ namespace SS13to64x
             }
             catch (Exception e)
             {
-                _log.Error("Error during extraction",e);
+                _log.Error("Error during extraction", e);
                 return null;
             }
             // only parse power of two
@@ -230,7 +230,7 @@ namespace SS13to64x
                 }
                 stateIndex++;
             }
-            _log.InfoFormat("Extracted {0}",file);
+            _log.InfoFormat("Extracted {0}", file);
             return Path.Combine(oPath, Datafile);
         }
     }

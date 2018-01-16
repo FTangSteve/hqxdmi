@@ -31,7 +31,7 @@ namespace SS13to64x.DMI
             DmiName = Path.GetFileNameWithoutExtension(file);
             using (var stream = File.OpenRead(file))
             {
-                var imageData = new FreeImageBitmap(stream,FREE_IMAGE_FORMAT.FIF_PNG);
+                var imageData = new FreeImageBitmap(stream, FREE_IMAGE_FORMAT.FIF_PNG);
                 var lines = new Queue<String>(imageData.Metadata.List[0].List[0].Value.ToString().Split('\n'));
                 var start = lines.Dequeue();
                 if (start != "# BEGIN DMI")
@@ -182,8 +182,8 @@ namespace SS13to64x.DMI
 
         public static void AddMetadata(String origFilename, Dictionary<string, string> data, String destFilename)
         {
-            PngReader pngr = FileHelper.CreatePngReader(origFilename); 
-            PngWriter pngw = FileHelper.CreatePngWriter(destFilename, pngr.ImgInfo, true); 
+            PngReader pngr = FileHelper.CreatePngReader(origFilename);
+            PngWriter pngw = FileHelper.CreatePngWriter(destFilename, pngr.ImgInfo, true);
 
             int chunkBehav = ChunkCopyBehaviour.COPY_ALL_SAFE; // tell to copy all 'safe' chunks
             pngw.CopyChunksFirst(pngr, chunkBehav);          // copy some metadata from reader
