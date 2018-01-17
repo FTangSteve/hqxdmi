@@ -112,6 +112,7 @@ namespace SS13to64x
                 _log.Error("Error during rebuild", e);
                 throw;
             }
+            /*
             if (!use4X)
             {
                 dmi.StateHeight = dmi.StateHeight*2;
@@ -122,6 +123,7 @@ namespace SS13to64x
                 dmi.StateHeight = dmi.StateHeight * 4;
                 dmi.StateWidth = dmi.StateWidth * 4;
             }
+            */
             var stateIndex = 0;
             foreach (var state in dmi.States)
             {
@@ -181,7 +183,7 @@ namespace SS13to64x
         private static string ExtractDMI(string input, string outPath, string file)
         {
             var ser =
-                new Serializer(new List<Type> {typeof (DmiImage), typeof (DMIState), typeof (DMIFrame), typeof (DMIImageData)});
+                new Serializer(new List<Type> { typeof(DmiImage), typeof(DMIState), typeof(DMIFrame), typeof(DMIImageData) });
             DmiImage dmi = null;
             try
             {
@@ -193,8 +195,8 @@ namespace SS13to64x
                 return null;
             }
             // only parse power of two
-            if (!IsPowerOfTwo(dmi.StateHeight) && !IsPowerOfTwo(dmi.StateWidth))
-                return null;
+            //            if (!IsPowerOfTwo(dmi.StateHeight) && !IsPowerOfTwo(dmi.StateWidth))
+            //                return null;
 
 
             var oPath = Path.Combine(outPath, Path.GetDirectoryName(file.Replace(input + "\\", "")), dmi.DmiName);
@@ -209,8 +211,9 @@ namespace SS13to64x
 
 
             var stateIndex = 0;
-            foreach (var dmiState in dmi.States)
+            for (int i = 0; i < dmi.States.Count(); i++)
             {
+                DMIState dmiState = dmi.States[i];
                 var statePath = Path.Combine(oPath, stateIndex.ToString());
                 if (!Directory.Exists(statePath))
                     Directory.CreateDirectory(statePath);
@@ -223,15 +226,67 @@ namespace SS13to64x
                     foreach (var image in frame.GetImages())
                     {
                         var imgPath = Path.Combine(framePath, image.Dir + ".png");
-                        var bitmap = !use4X ? hqx.HqxSharp.Scale2(image.Bitmap) : hqx.HqxSharp.Scale4(image.Bitmap);
-                        bitmap.Save(imgPath);
+                        //  var bitmap = !use4X ? hqx.HqxSharp.Scale2(image.Bitmap) : hqx.HqxSharp.Scale4(image.Bitmap);
+                        //                    Bitmap bitmap = DoTransform(image);
+                        MakeGreyscaleSquare(image);
+                        image.Bitmap.Save(imgPath);
                     }
                     frameIndex++;
                 }
+                //                dmi.States[i] = MakeGreyscaleSquare(dmiState);
+
                 stateIndex++;
             }
             _log.InfoFormat("Extracted {0}", file);
+
             return Path.Combine(oPath, Datafile);
+        }
+
+        private static DMIImageData MakeGreyscaleSquare(DMIImageData image)
+        {
+            FreeImageAPI.FreeImageBitmap bit = new FreeImageAPI.FreeImageBitmap(image.Bitmap);
+            bit.ConvertColorDepth(FreeImageAPI.FREE_IMAGE_COLOR_DEPTH.FICD_32_BPP);
+
+            Color grey = new Color();
+            grey = bit.GetPixel(2, 2);
+            for (int i = 0; i < bit.Height; i++)
+            {
+                for (int j = 0; j < bit.Width; j++)
+                {
+
+                    // grey = Color.FromArgb(0, 192, 192, 2);
+                    grey = Color.FromArgb(255, j, i, 0);
+                    //bit.SetPixel(j, i, grey);
+                    //bit.SetPixel(2, 2, bit.GetPixel(2, 2));
+                    //                         bit.SetPixel(j, i, bit.GetPixel(20, 20));
+                    bit.SetPixel(j, i, grey);
+                }
+            }
+            image.Bitmap = bit.ToBitmap();
+
+            return image;
+        }
+
+        private static void OverSetPixel(FreeImageAPI.FreeImageBitmap bit)
+        {
+            // IList<FreeImageAPI.Scanline pixList = bit.GetScanlines();
+        }
+
+        private static DMIState DoDirecTransform(DMIState state, DMIState template)
+        {
+            //Bitmap temp = !use4X ? hqx.HqxSharp.Scale2(image.Bitmap) : hqx.HqxSharp.Scale4(image.Bitmap);
+            //     Bitmap temp;
+
+            foreach (DMIFrame frame in state.GetFrames())
+            {
+                foreach (DMIImageData image in frame.GetImages())
+                {
+
+                }
+            }
+
+            return state;
         }
     }
 }
+
