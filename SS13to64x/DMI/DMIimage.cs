@@ -205,7 +205,6 @@ namespace SS13to64x.DMI
             pngw.End(); // dont forget this
             pngr.End();
             File.Delete(origFilename);
-            File.Move(destFilename, origFilename);
         }
 
         public static void AddMetadata(String origFilename, string key, string value, String outPath)

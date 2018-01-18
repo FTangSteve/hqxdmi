@@ -112,18 +112,6 @@ namespace SS13to64x
                 _log.Error("Error during rebuild", e);
                 throw;
             }
-            /*
-            if (!use4X)
-            {
-                dmi.StateHeight = dmi.StateHeight*2;
-                dmi.StateWidth = dmi.StateWidth*2;
-            }
-            else
-            {
-                dmi.StateHeight = dmi.StateHeight * 4;
-                dmi.StateWidth = dmi.StateWidth * 4;
-            }
-            */
             var stateIndex = 0;
             foreach (var state in dmi.States)
             {
@@ -194,10 +182,6 @@ namespace SS13to64x
                 _log.Error("Error during extraction", e);
                 return null;
             }
-            // only parse power of two
-            //            if (!IsPowerOfTwo(dmi.StateHeight) && !IsPowerOfTwo(dmi.StateWidth))
-            //                return null;
-
 
             var oPath = Path.Combine(outPath, Path.GetDirectoryName(file.Replace(input + "\\", "")), dmi.DmiName);
             if (!Directory.Exists(oPath))
@@ -226,20 +210,89 @@ namespace SS13to64x
                     foreach (var image in frame.GetImages())
                     {
                         var imgPath = Path.Combine(framePath, image.Dir + ".png");
-                        //  var bitmap = !use4X ? hqx.HqxSharp.Scale2(image.Bitmap) : hqx.HqxSharp.Scale4(image.Bitmap);
-                        //                    Bitmap bitmap = DoTransform(image);
-                        MakeGreyscaleSquare(image);
+                        MakeImageTransform(image);
                         image.Bitmap.Save(imgPath);
                     }
                     frameIndex++;
                 }
-                //                dmi.States[i] = MakeGreyscaleSquare(dmiState);
-
                 stateIndex++;
             }
             _log.InfoFormat("Extracted {0}", file);
 
             return Path.Combine(oPath, Datafile);
+        }
+
+        /// <summary>
+        /// Transform a given image using a direction specific template
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns>Uses pass by reference, no return</returns>
+        private static void MakeImageTransform(DMIImageData image)
+        {
+            FreeImageAPI.FreeImageBitmap inMap = new FreeImageAPI.FreeImageBitmap(image.Bitmap);
+            FreeImageAPI.FreeImageBitmap transMap = new FreeImageAPI.FreeImageBitmap("./in/Templates/UnathiUnder" + image.Dir + ".png");
+            inMap.ConvertColorDepth(FreeImageAPI.FREE_IMAGE_COLOR_DEPTH.FICD_32_BPP);
+            transMap.ConvertColorDepth(FreeImageAPI.FREE_IMAGE_COLOR_DEPTH.FICD_32_BPP);
+            Color inCol = new Color();
+            Color transCol = new Color();
+            Color clearRead = Color.FromArgb(0, 192, 192, 192);
+            Color clearWrite = inMap.GetPixel(0, 0);
+            int[,][] transStore = new int[transMap.Width, transMap.Height][];
+
+            // Get the original tranformation map's colours and store in 2D jagged array for manipulation
+            for (int i = 0; i < transMap.Height; i++)
+            {
+                for (int j = 0; j < transMap.Width; j++)
+                {
+                    transCol = transMap.GetPixel(j, i);
+                    transStore[j, i] = new int[4] { transCol.A, transCol.R, transCol.G, transCol.B };
+                }
+            }
+
+            // Iterate through the image pixel by pixel, taking the colour from the original and applying it to
+            // all members of the transform array with a colour that matches the location based on i and j.
+            // Ex: if i is 10 and j is 20, all places in the array with the ARGB colour (255, 10, 20, 0)
+            // will be replaced with the new colour.
+            for (int i = 0; i < inMap.Height; i++)
+            {
+                for (int j = 0; j < inMap.Width; j++)
+                {
+                    inCol = inMap.GetPixel(j, i);
+                    transCol = Color.FromArgb(255, j, i, 0);
+                    // 
+                    transStore = StoreColReplace(transStore, transCol, inCol, transMap.Height, transMap.Width);
+                }
+            }
+            // Takes the array and writes the new pixels onto the template
+            for (int i = 0; i < transMap.Height; i++)
+            {
+                for (int j = 0; j < transMap.Width; j++)
+                {
+                    Color tempCol = Color.FromArgb(transStore[j, i][0], transStore[j, i][1], transStore[j, i][2], transStore[j, i][3]);
+                    if (tempCol.Equals(clearWrite))
+                        tempCol = Color.FromArgb(transStore[31, 15][0], transStore[31, 15][1], transStore[31, 15][2], transStore[31, 15][3]);
+                    transMap.SetPixel(j, i, tempCol);
+                }
+            }
+            transMap.PreMultiplyWithAlpha();
+            image.Bitmap = transMap.ToBitmap();
+        }
+
+        private static int[,][] StoreColReplace(int[,][] colMatrix, Color transCol, Color newCol, int width, int height)
+        {
+            for (int i = 0; i < height; i++)
+            {
+                for (int j = 0; j < width; j++)
+                {
+                    if (colMatrix[j, i][0] == transCol.A && colMatrix[j, i][1] == transCol.R && colMatrix[j, i][2] == transCol.G && colMatrix[j, i][3] == transCol.B)
+                    {
+                        colMatrix[j, i] = new int[4] { newCol.A, newCol.R, newCol.G, newCol.B };
+                    }
+                }
+            }
+
+
+            return colMatrix;
         }
 
         private static DMIImageData MakeGreyscaleSquare(DMIImageData image)
@@ -253,39 +306,13 @@ namespace SS13to64x
             {
                 for (int j = 0; j < bit.Width; j++)
                 {
-
-                    // grey = Color.FromArgb(0, 192, 192, 2);
                     grey = Color.FromArgb(255, j, i, 0);
-                    //bit.SetPixel(j, i, grey);
-                    //bit.SetPixel(2, 2, bit.GetPixel(2, 2));
-                    //                         bit.SetPixel(j, i, bit.GetPixel(20, 20));
                     bit.SetPixel(j, i, grey);
                 }
             }
             image.Bitmap = bit.ToBitmap();
 
             return image;
-        }
-
-        private static void OverSetPixel(FreeImageAPI.FreeImageBitmap bit)
-        {
-            // IList<FreeImageAPI.Scanline pixList = bit.GetScanlines();
-        }
-
-        private static DMIState DoDirecTransform(DMIState state, DMIState template)
-        {
-            //Bitmap temp = !use4X ? hqx.HqxSharp.Scale2(image.Bitmap) : hqx.HqxSharp.Scale4(image.Bitmap);
-            //     Bitmap temp;
-
-            foreach (DMIFrame frame in state.GetFrames())
-            {
-                foreach (DMIImageData image in frame.GetImages())
-                {
-
-                }
-            }
-
-            return state;
         }
     }
 }
