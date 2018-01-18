@@ -1,3 +1,4 @@
 # hqxdmi
-Converts dmi to a higher res using HQX
-Made by Sebastian Broberg
+Uses transformation matrices to change large amounts of .dmi files at a time.
+
+Built on code by Sebastian Broberg
