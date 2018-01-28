@@ -112,6 +112,10 @@ namespace SS13to64x
                 _log.Error("Error during rebuild", e);
                 throw;
             }
+
+            dmi.StateHeight = 32;
+            dmi.StateWidth = 32;
+
             var stateIndex = 0;
             foreach (var state in dmi.States)
             {
@@ -230,7 +234,9 @@ namespace SS13to64x
         private static void MakeImageTransform(DMIImageData image)
         {
             FreeImageAPI.FreeImageBitmap inMap = new FreeImageAPI.FreeImageBitmap(image.Bitmap);
-            FreeImageAPI.FreeImageBitmap transMap = new FreeImageAPI.FreeImageBitmap("./in/Templates/UnathiUnder" + image.Dir + ".png");
+                         FreeImageAPI.FreeImageBitmap transMap = new FreeImageAPI.FreeImageBitmap("./in/Templates/UnathiUnder" + image.Dir + ".png");
+    //        FreeImageAPI.FreeImageBitmap transMap = new FreeImageAPI.FreeImageBitmap("./in/Templates/UnathiHatGlass.png");
+      //      FreeImageAPI.FreeImageBitmap transMap = new FreeImageAPI.FreeImageBitmap("./in/Templates/TallGreySquare.png");
             inMap.ConvertColorDepth(FreeImageAPI.FREE_IMAGE_COLOR_DEPTH.FICD_32_BPP);
             transMap.ConvertColorDepth(FreeImageAPI.FREE_IMAGE_COLOR_DEPTH.FICD_32_BPP);
             Color inCol = new Color();
@@ -238,7 +244,8 @@ namespace SS13to64x
             Color clearRead = Color.FromArgb(0, 192, 192, 192);
             Color clearWrite = inMap.GetPixel(0, 0);
             int[,][] transStore = new int[transMap.Width, transMap.Height][];
-
+            if (image.Dir == 4)
+                inMap.RotateFlip(RotateFlipType.RotateNoneFlipX);
             // Get the original tranformation map's colours and store in 2D jagged array for manipulation
             for (int i = 0; i < transMap.Height; i++)
             {
@@ -260,7 +267,7 @@ namespace SS13to64x
                     inCol = inMap.GetPixel(j, i);
                     transCol = Color.FromArgb(255, j, i, 0);
                     // 
-                    transStore = StoreColReplace(transStore, transCol, inCol, transMap.Height, transMap.Width);
+                    transStore = StoreColReplace(transStore, transCol, inCol, transMap.Width, transMap.Height);
                 }
             }
             // Takes the array and writes the new pixels onto the template
@@ -269,12 +276,16 @@ namespace SS13to64x
                 for (int j = 0; j < transMap.Width; j++)
                 {
                     Color tempCol = Color.FromArgb(transStore[j, i][0], transStore[j, i][1], transStore[j, i][2], transStore[j, i][3]);
+
                     if (tempCol.Equals(clearWrite))
                         tempCol = Color.FromArgb(transStore[31, 15][0], transStore[31, 15][1], transStore[31, 15][2], transStore[31, 15][3]);
                     transMap.SetPixel(j, i, tempCol);
                 }
             }
             transMap.PreMultiplyWithAlpha();
+            if (image.Dir == 4)
+                transMap.RotateFlip(RotateFlipType.RotateNoneFlipX);
+
             image.Bitmap = transMap.ToBitmap();
         }
 
