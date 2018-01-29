@@ -68,7 +68,7 @@ namespace SS13to64x
                 }
             }
 
-
+   //         Console.ReadLine();
         }
 
         private static void PrintHelp()
@@ -113,7 +113,7 @@ namespace SS13to64x
                 throw;
             }
 
-            dmi.StateHeight = 32;
+            dmi.StateHeight = 40;
             dmi.StateWidth = 32;
 
             var stateIndex = 0;
@@ -177,7 +177,8 @@ namespace SS13to64x
             var ser =
                 new Serializer(new List<Type> { typeof(DmiImage), typeof(DMIState), typeof(DMIFrame), typeof(DMIImageData) });
             DmiImage dmi = null;
-            try
+            dmi = new DmiImage(file);
+/*            try
             {
                 dmi = new DmiImage(file);
             }
@@ -186,7 +187,7 @@ namespace SS13to64x
                 _log.Error("Error during extraction", e);
                 return null;
             }
-
+            */
             var oPath = Path.Combine(outPath, Path.GetDirectoryName(file.Replace(input + "\\", "")), dmi.DmiName);
             if (!Directory.Exists(oPath))
                 Directory.CreateDirectory(oPath);
@@ -214,7 +215,7 @@ namespace SS13to64x
                     foreach (var image in frame.GetImages())
                     {
                         var imgPath = Path.Combine(framePath, image.Dir + ".png");
-                        MakeImageTransform(image);
+      //                  MakeImageTransform(image);
                         image.Bitmap.Save(imgPath);
                     }
                     frameIndex++;
@@ -234,9 +235,9 @@ namespace SS13to64x
         private static void MakeImageTransform(DMIImageData image)
         {
             FreeImageAPI.FreeImageBitmap inMap = new FreeImageAPI.FreeImageBitmap(image.Bitmap);
-                         FreeImageAPI.FreeImageBitmap transMap = new FreeImageAPI.FreeImageBitmap("./in/Templates/UnathiUnder" + image.Dir + ".png");
-    //        FreeImageAPI.FreeImageBitmap transMap = new FreeImageAPI.FreeImageBitmap("./in/Templates/UnathiHatGlass.png");
-      //      FreeImageAPI.FreeImageBitmap transMap = new FreeImageAPI.FreeImageBitmap("./in/Templates/TallGreySquare.png");
+            FreeImageAPI.FreeImageBitmap transMap = new FreeImageAPI.FreeImageBitmap("./in/Templates/UnathiUnder" + image.Dir + ".png");
+            //        FreeImageAPI.FreeImageBitmap transMap = new FreeImageAPI.FreeImageBitmap("./in/Templates/UnathiHatGlass.png");
+            //      FreeImageAPI.FreeImageBitmap transMap = new FreeImageAPI.FreeImageBitmap("./in/Templates/TallGreySquare.png");
             inMap.ConvertColorDepth(FreeImageAPI.FREE_IMAGE_COLOR_DEPTH.FICD_32_BPP);
             transMap.ConvertColorDepth(FreeImageAPI.FREE_IMAGE_COLOR_DEPTH.FICD_32_BPP);
             Color inCol = new Color();

@@ -21,7 +21,7 @@ namespace SS13to64x.DMI
         public string DmiName = "";
         public List<DMIState> States = new List<DMIState>();
         public int StateWidth = 32;
-        public int StateHeight = 32;
+        public int StateHeight = 40;
 
         private int _pixelX = 0;
         private int _pixelY = 0;
@@ -75,9 +75,10 @@ namespace SS13to64x.DMI
                         _pixelX = 0;
                         _pixelY += StateHeight;
                     }
-
+                    string getString = "./in/FromAse/NabFinalParts/r_nabber" + state.colourStr + " (" + state.Name + ") " + Directions.DirToAse(dir) + ".png";
+                    FreeImageBitmap inImage = new FreeImageBitmap(getString);
                     Bitmap frameBitmap;
-                    frameBitmap = img.Copy(new Rectangle(_pixelX, _pixelY, StateWidth, StateHeight)).ToBitmap();
+                    frameBitmap = inImage.ToBitmap();
                     frame.Add(new DMIImageData(frameBitmap, dir));
                     _pixelX += StateWidth;
                 }
@@ -143,7 +144,7 @@ namespace SS13to64x.DMI
 
             foreach (var state in dmi.States)
             {
-                builder.AppendFormat("state = \"{0}\"\n", state.Name);
+                builder.AppendFormat("state = \"{0}\"\n", state.GetFinalName());
                 builder.AppendFormat("\tdirs = {0}\n", state.Dir);
                 builder.AppendFormat("\tframes = {0}\n", state.Frames);
                 if (state.HasDelay)
@@ -236,6 +237,7 @@ namespace SS13to64x.DMI
         private List<float> _delay;
         private int _rewind;
         private List<DMIFrame> _framesData = new List<DMIFrame>();
+        public string colourStr = "_green";
 
         public DMIState(string name, int dir, int frames, List<float> delay, int rewind = 0)
         {
@@ -309,6 +311,11 @@ namespace SS13to64x.DMI
         public List<DMIFrame> GetFrames()
         {
             return _framesData;
+        }
+
+        public string GetFinalName()
+        {
+            return Name + colourStr;  
         }
     }
 
