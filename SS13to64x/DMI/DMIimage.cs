@@ -52,7 +52,7 @@ namespace SS13to64x.DMI
                 _pixelY = 0;
                 foreach (var state in States)
                 {
-                    GetFrames(state, imageData);
+                    GetFrames(state, imageData, true);
                 }
             }
         }
@@ -62,7 +62,7 @@ namespace SS13to64x.DMI
             return DmiName;
         }
 
-        private void GetFrames(DMIState state, FreeImageBitmap img)
+        private void GetFrames(DMIState state, FreeImageBitmap img, bool loadAseprite = false)
         {
             for (int i = 0; i < state.Frames; i++)
             {
@@ -78,14 +78,11 @@ namespace SS13to64x.DMI
                         _pixelY += StateHeight;
                     }
                     Bitmap frameBitmap;
-#if (ASEPRITE_LOAD)
- //                       string getString = "./in/FromAse/NabFinalParts/r_nabber" + state.colourStr + " (" + state.Name + ") " + Directions.DirToAse(dir) + ".png";
-                        string getString = "./in/FromAse/NabFinalParts/r_nabber" + state.colourStr + " (" + state.Name + ") " + Directions.DirToAse(dir) + ".png";
-                        FreeImageBitmap inImage = new FreeImageBitmap(getString);
-                        frameBitmap = inImage.ToBitmap();
-#else
-                    frameBitmap = img.Copy(new Rectangle(_pixelX, _pixelY, StateWidth, StateHeight)).ToBitmap();
-#endif
+                    if (loadAseprite)
+                        frameBitmap = LoadAsepriteBitmap(state, dir, i);
+                    else
+                        frameBitmap = img.Copy(new Rectangle(_pixelX, _pixelY, StateWidth, StateHeight)).ToBitmap();
+
                     frame.Add(new DMIImageData(frameBitmap, dir));
                     _pixelX += StateWidth;
                 }
@@ -93,6 +90,16 @@ namespace SS13to64x.DMI
             }
         }
 
+        private Bitmap LoadAsepriteBitmap(DMIState state, int dir, int frameNum)
+        {
+            // string getString = "./in/FromAse/NabFinalParts/r_nabber" + state.colourStr + " (" + state.Name + ") " + Directions.DirToAse(dir) + ".png";
+            string bracketString = Directions.dirToString(dir).ToUpper();
+            if (state.Name.Contains("eyes-"))
+                bracketString = "face";
+            string getString = "./in/CrabAseprite/" + state.robModule + " (" + bracketString + ") " + frameNum + ".png";
+            FreeImageBitmap inImage = new FreeImageBitmap(getString);
+            return inImage.ToBitmap();
+        }
         private void ReadState(string name, Queue<string> lines)
         {
             var dirs = int.Parse(GetValue(lines.Dequeue()));
@@ -107,8 +114,15 @@ namespace SS13to64x.DMI
                 rewind = int.Parse(GetValue(lines.Dequeue()));
             if (lines.Peek().Contains("movement"))
                 movement = int.Parse(GetValue(lines.Dequeue()));
-            var state = new DMIState(name, dirs, frames, delay, rewind, movement);
-            States.Add(state);
+
+            string[] moduleTypes = { "Standard", "Engineering", "Construction", "Janitor", "Surgeon", "Crisis", "Miner", "Security", "Service", "Clerical", "Research" };
+            Array.Sort(moduleTypes);
+            foreach (string palette in moduleTypes)
+            {
+                string stateName = name + "ftangsteve-" + palette;
+                var state = new DMIState(stateName, dirs, frames, delay, rewind, movement, palette);
+                States.Add(state);
+            }
         }
 
         private List<float> GetIntList(string dequeue)
@@ -161,7 +175,7 @@ namespace SS13to64x.DMI
                     builder.AppendFormat("\tdelay = {0}\n", state.GetDelayString);
                 if (state.Rewind > 0)
                     builder.AppendFormat("\trewind = {0}\n", state.Rewind);
-                if (state.Movement> 0)
+                if (state.Movement > 0)
                     builder.AppendFormat("\tmovement = {0}\n", state.Movement);
                 foreach (var frame in state.GetFrames())
                 {
@@ -251,9 +265,9 @@ namespace SS13to64x.DMI
         private int _rewind;
         private int _movement;
         private List<DMIFrame> _framesData = new List<DMIFrame>();
-        public string colourStr = "ftangsteve-Standard";
+        public string robModule = "";
 
-        public DMIState(string name, int dir, int frames, List<float> delay, int rewind = 0, int movement = 0)
+        public DMIState(string name, int dir, int frames, List<float> delay, int rewind = 0, int movement = 0, string robModule = "")
         {
             Name = name;
             _dir = dir;
@@ -261,6 +275,7 @@ namespace SS13to64x.DMI
             _delay = delay;
             Rewind = rewind;
             Movement = movement;
+            this.robModule = robModule;
         }
 
         public int Frames { get { return _frames; } }
@@ -336,7 +351,7 @@ namespace SS13to64x.DMI
 
         public string GetFinalName()
         {
-            return Name + colourStr;  
+            return Name;
         }
     }
 
