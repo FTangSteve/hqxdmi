@@ -68,7 +68,7 @@ namespace SS13to64x
                 }
             }
 
-   //         Console.ReadLine();
+            Console.ReadLine();
         }
 
         private static void PrintHelp()
@@ -113,7 +113,7 @@ namespace SS13to64x
                 throw;
             }
 
-            dmi.StateHeight = 40;
+            dmi.StateHeight = 32;
             dmi.StateWidth = 32;
 
             var stateIndex = 0;

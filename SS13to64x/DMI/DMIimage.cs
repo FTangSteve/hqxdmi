@@ -1,4 +1,6 @@
-﻿using DreamEdit.DMI;
+﻿#define ASEPRITE_LOAD 
+
+using DreamEdit.DMI;
 using FreeImageAPI;
 using FreeImageAPI.Metadata;
 using Hjg.Pngcs;
@@ -21,7 +23,7 @@ namespace SS13to64x.DMI
         public string DmiName = "";
         public List<DMIState> States = new List<DMIState>();
         public int StateWidth = 32;
-        public int StateHeight = 40;
+        public int StateHeight = 32;
 
         private int _pixelX = 0;
         private int _pixelY = 0;
@@ -75,10 +77,15 @@ namespace SS13to64x.DMI
                         _pixelX = 0;
                         _pixelY += StateHeight;
                     }
-                    string getString = "./in/FromAse/NabFinalParts/r_nabber" + state.colourStr + " (" + state.Name + ") " + Directions.DirToAse(dir) + ".png";
-                    FreeImageBitmap inImage = new FreeImageBitmap(getString);
                     Bitmap frameBitmap;
-                    frameBitmap = inImage.ToBitmap();
+#if (ASEPRITE_LOAD)
+ //                       string getString = "./in/FromAse/NabFinalParts/r_nabber" + state.colourStr + " (" + state.Name + ") " + Directions.DirToAse(dir) + ".png";
+                        string getString = "./in/FromAse/NabFinalParts/r_nabber" + state.colourStr + " (" + state.Name + ") " + Directions.DirToAse(dir) + ".png";
+                        FreeImageBitmap inImage = new FreeImageBitmap(getString);
+                        frameBitmap = inImage.ToBitmap();
+#else
+                    frameBitmap = img.Copy(new Rectangle(_pixelX, _pixelY, StateWidth, StateHeight)).ToBitmap();
+#endif
                     frame.Add(new DMIImageData(frameBitmap, dir));
                     _pixelX += StateWidth;
                 }
@@ -93,11 +100,14 @@ namespace SS13to64x.DMI
 
             var delay = new List<float>();
             var rewind = 0;
+            var movement = 0;
             if (lines.Peek().Contains("delay"))
                 delay = GetIntList(lines.Dequeue());
             if (lines.Peek().Contains("rewind"))
                 rewind = int.Parse(GetValue(lines.Dequeue()));
-            var state = new DMIState(name, dirs, frames, delay, rewind);
+            if (lines.Peek().Contains("movement"))
+                movement = int.Parse(GetValue(lines.Dequeue()));
+            var state = new DMIState(name, dirs, frames, delay, rewind, movement);
             States.Add(state);
         }
 
@@ -151,6 +161,8 @@ namespace SS13to64x.DMI
                     builder.AppendFormat("\tdelay = {0}\n", state.GetDelayString);
                 if (state.Rewind > 0)
                     builder.AppendFormat("\trewind = {0}\n", state.Rewind);
+                if (state.Movement> 0)
+                    builder.AppendFormat("\tmovement = {0}\n", state.Movement);
                 foreach (var frame in state.GetFrames())
                 {
                     foreach (var image in frame.GetImages())
@@ -159,7 +171,8 @@ namespace SS13to64x.DMI
                         {
                             for (int y = 0; y < dmi.StateHeight; y++)
                             {
-                                img.SetPixel(pixelX + x, pixelY - y, image.Bitmap.GetPixel(x, y));
+                                var colour = image.Bitmap.GetPixel(x, y);
+                                img.SetPixel(pixelX + x, pixelY - y, colour);
                             }
                         }
                         pixelX += dmi.StateWidth;
@@ -236,16 +249,18 @@ namespace SS13to64x.DMI
         private int _frames;
         private List<float> _delay;
         private int _rewind;
+        private int _movement;
         private List<DMIFrame> _framesData = new List<DMIFrame>();
-        public string colourStr = "_green";
+        public string colourStr = "ftangsteve-Standard";
 
-        public DMIState(string name, int dir, int frames, List<float> delay, int rewind = 0)
+        public DMIState(string name, int dir, int frames, List<float> delay, int rewind = 0, int movement = 0)
         {
             Name = name;
             _dir = dir;
             _frames = frames;
             _delay = delay;
             Rewind = rewind;
+            Movement = movement;
         }
 
         public int Frames { get { return _frames; } }
@@ -287,6 +302,12 @@ namespace SS13to64x.DMI
         {
             get { return _rewind; }
             set { _rewind = value; }
+        }
+
+        public int Movement
+        {
+            get { return _movement; }
+            set { _movement = value; }
         }
 
         public float GetDelay(int i)
