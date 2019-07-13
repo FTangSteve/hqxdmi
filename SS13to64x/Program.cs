@@ -234,9 +234,9 @@ namespace SS13to64x
         private static void MakeImageTransform(DMIImageData image)
         {
             FreeImageAPI.FreeImageBitmap inMap = new FreeImageAPI.FreeImageBitmap(image.Bitmap);
-                         FreeImageAPI.FreeImageBitmap transMap = new FreeImageAPI.FreeImageBitmap("./in/Templates/UnathiUnder" + image.Dir + ".png");
-    //        FreeImageAPI.FreeImageBitmap transMap = new FreeImageAPI.FreeImageBitmap("./in/Templates/UnathiHatGlass.png");
-      //      FreeImageAPI.FreeImageBitmap transMap = new FreeImageAPI.FreeImageBitmap("./in/Templates/TallGreySquare.png");
+            FreeImageAPI.FreeImageBitmap transMap = new FreeImageAPI.FreeImageBitmap("../../Images/in/Templates/MonkeyUnder" + image.Dir + ".png");
+            //        FreeImageAPI.FreeImageBitmap transMap = new FreeImageAPI.FreeImageBitmap("../../Images/in/Templates/UnathiHatGlass.png");
+            //      FreeImageAPI.FreeImageBitmap transMap = new FreeImageAPI.FreeImageBitmap("../../Images/in/TallGreySquare.png");
             inMap.ConvertColorDepth(FreeImageAPI.FREE_IMAGE_COLOR_DEPTH.FICD_32_BPP);
             transMap.ConvertColorDepth(FreeImageAPI.FREE_IMAGE_COLOR_DEPTH.FICD_32_BPP);
             Color inCol = new Color();
