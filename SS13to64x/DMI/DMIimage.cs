@@ -95,7 +95,7 @@ namespace SS13to64x.DMI
             // string getString = "./in/FromAse/NabFinalParts/r_nabber" + state.colourStr + " (" + state.Name + ") " + Directions.DirToAse(dir) + ".png";
             string bracketString = Directions.dirToString(dir).ToUpper();
             if (state.Name.Contains("eyes-"))
-                bracketString = "face";
+                bracketString = "Face " + bracketString;
             string getString = "./in/CrabAseprite/" + state.robModule + " (" + bracketString + ") " + frameNum + ".png";
             FreeImageBitmap inImage = new FreeImageBitmap(getString);
             return inImage.ToBitmap();
@@ -109,7 +109,11 @@ namespace SS13to64x.DMI
             var rewind = 0;
             var movement = 0;
             if (lines.Peek().Contains("delay"))
+            {
                 delay = GetIntList(lines.Dequeue());
+                for (int i = 0; i < delay.Count; i++)
+                    delay[i] = 0.6f;
+            }
             if (lines.Peek().Contains("rewind"))
                 rewind = int.Parse(GetValue(lines.Dequeue()));
             if (lines.Peek().Contains("movement"))
